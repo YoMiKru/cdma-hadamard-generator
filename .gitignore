@@ -1,0 +1,12 @@
+workspace.code-workspace
+
+# Package metadata
+src/*.egg-info/
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# Outputs
+matrices_output/
