@@ -2,59 +2,85 @@ import numpy as np
 from src.hadamard import HadamardMatrix 
 
 class Correlation:
-    """Récupère les codes (ou colonnes) d'une matrice hadamard et test leur corrélation. Les codes non orthonnaux sont ignorés."""
+    """Récupère les codes (colonnes) d'une matrice de Hadamard et teste leur orthogonalité."""
 
-    def __init__(self, hadamard_matrix):
-        self.__hadamard_matrix:HadamardMatrix = hadamard_matrix
+    def __init__(self, hadamard_matrix, check_orthogonality: bool = True):
+        # accepte soit l'objet soit directement la matrice numpy
+        if isinstance(hadamard_matrix, HadamardMatrix):
+            self.__hadamard_matrix = hadamard_matrix.matrix
+        else:
+            self.__hadamard_matrix = np.array(hadamard_matrix)
 
-        self.__codes:list[np.array] = []
-        self.__valid_codes:list[np.array] = []
-        self.__invalid_codes:list[np.array] = []
+        self.__codes: list[np.array] = []
+        self.__valid_codes: list[np.array] = []
+        self.__invalid_codes: list[np.array] = []
 
         self.extractCodes()
-        self.ValidCodes()
+
+        if(check_orthogonality):
+            self.classify_codes()
+        else:
+            self.__valid_codes = self.__codes.copy()
+            self.__invalid_codes = []
 
     @staticmethod
-    def isOrthogonal(code:np.array) -> bool:
-        """Vérifie l'orthogonalité des codes. Si la somme des valeurs d'un code est égal à 0 alors elle est orthogonal. Retourne un bool """
-        sum:int = 0
-        orthogonal:bool = False
-        for n in code:
-            sum += n
+    def isBalanced(code: np.array) -> bool:
+        """Vérifie si un code est équilibré (+1 et -1 en même nombre)."""
+        return np.sum(code) == 0
 
-        if(sum == 0):
-            orthogonal = True
-
-        return orthogonal
+    @staticmethod
+    def isOrthogonal(code1: np.array, code2: np.array) -> bool:
+        """Vérifie si deux codes sont orthogonaux."""
+        return np.dot(code1, code2) == 0
     
-    def ValidCodes(self):
-        """Retourne une liste des codes """
-        for c in self.__codes:
-            if Correlation.isOrthogonal(c):
-                self.__valid_codes.append(c)
+    def check_all_orthogonal(self) -> bool:
+        """Vérifie si toutes les paires de codes sont orthogonales."""
+        n = len(self.__codes)
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                if not Correlation.isOrthogonal(self.__codes[i], self.__codes[j]):
+                    print(f"Codes {i} et {j} non orthogonaux")
+                    return False
+
+        return True
+
+    def classify_codes(self):
+        """Classe les codes en valides (orthogonaux avec tous) et invalides."""
+        n = len(self.__codes)
+        self.__valid_codes = []
+        self.__invalid_codes = []
+
+        for i in range(n):
+            is_valid = True
+
+            for j in range(n):
+                if i != j:
+                    if not Correlation.isOrthogonal(self.__codes[i], self.__codes[j]):
+                        is_valid = False
+                        break
+
+            if is_valid:
+                self.__valid_codes.append(self.__codes[i])
             else:
-                self.__invalid_codes.append(c)
+                self.__invalid_codes.append(self.__codes[i])
+
     def extractCodes(self):
-        """Récupère les codes, les colonnes de la matrices et les retournes sous forme de liste d'array"""
-        for row in self.__hadamard_matrix:
-            code = np.array([], dtype=int)
-            for value in row:
-                code = np.append(code, value)
-                
-            self.__codes.append(code)
+        """Récupère les colonnes de la matrice (codes CDMA)."""
+        self.__codes = [
+            self.__hadamard_matrix[:, i]
+            for i in range(self.__hadamard_matrix.shape[1])
+        ]
+    
 
     def getAllCodes(self) -> list[np.array]:
-        """Retourne une liste de tout les codes possibles."""
-        return(self.__codes)
+        return self.__codes
     
     def getCode(self, index) -> np.array:
-        """Retourne un code du numéro de l'index. (Index débute à 0)"""
-        return(self.__codes[index])
+        return self.__codes[index]
 
     def getValidCodes(self) -> list[np.array]:
-        """Retourne une liste des codes orthogonaux."""
-        return(self.__valid_codes)
+        return self.__valid_codes
 
     def getInvalidCodes(self) -> list[np.array]:
-        """Retourne une liste des codes non orthogonaux."""
-        return(self.__invalid_codes)
+        return self.__invalid_codes

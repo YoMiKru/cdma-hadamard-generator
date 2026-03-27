@@ -12,9 +12,12 @@ def recurring_matrix(H):
     filepath = saveProperties(h3)
     print(f"Sauvegardé : {filepath}")"""
 
-def show_orthonal(transformation:Correlation):
+def show_balanced(transformation:Correlation):
     for i, c in enumerate(transformation.getAllCodes()):
-        print(f"Le code {i} {c} est {'orthogonal' if Correlation.isOrthogonal(c) else 'pas orthogonal'}")
+        print(f"Le code {i} {c} est {'équilibré' if Correlation.isBalanced(c) else 'pas équilibré'}")
+
+def show_orthogonal(transformation:Correlation):
+    print(f"Les codes orthogonaux sont : \n{transformation.getValidCodes()} \n Et les codes non orthogonaux sont : \n {transformation.getInvalidCodes()}")
 
 running:bool = True
 while running:
@@ -25,13 +28,17 @@ while running:
     h3 = HadamardMatrix.generate(n=3, base_matrix=base_matrix, recurring_matrix=recurring_matrix).matrix
 
 
-    t3:Correlation = Correlation(h3)
-    Correlation.testing(t3)
+    t3:Correlation = Correlation(hadamard_matrix=h3, check_orthogonality=False)
 
+    
 
-    do_show_orthogonal:bool = True
+    do_show_orthogonal:bool = False
     if do_show_orthogonal:
-        show_orthonal(t3)
+        show_orthogonal(t3)
+
+    do_show_balanced:bool = False
+    if do_show_balanced:
+        show_balanced(t3)
 
     """do_save:bool = False
     if do_save:
